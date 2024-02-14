@@ -6,8 +6,6 @@ import EncryptedStorage from 'react-native-encrypted-storage';
 import { handleFakeApiCall } from "../services/api"
 
 
-console.log({EncryptedStorage})
-
 const BiometricsContainer = () => {
     const isDarkMode = useColorScheme() === 'dark'
     const { biometricsInfo, biometrics } = useContext(BiometricsContext)
@@ -29,7 +27,7 @@ const BiometricsContainer = () => {
         }
         return
     },[])
-    
+
     const handleLogin = useCallback(async () => {
         try {
             // Tenta acessar API
@@ -47,19 +45,20 @@ const BiometricsContainer = () => {
             }
             return
         }
-    },[])
-    const toggleSwitch = async () => {
-        if(!username.length || userPassword.length) return
+    },[username, userPassword, isBiometricAuthEnabled, storedUserMatches])
+
+    const toggleSwitch = async (value: boolean) => {
+        // console.log('Call', {username, userPassword})
+        if(!username.length || !userPassword.length) return
+
         const storedUser = await getStoredUser()
         if(storedUser) {
             if(storedUser.username !== username){
                 Alert.alert('Outro usuário já usa autenticação biométrica')
             }
             setStoredUserMatches(true)
-            return
-
         }
-        setIsBiometricAuthEnabled(prevState => !prevState)
+        setIsBiometricAuthEnabled(() => value)
         
     };
 
@@ -95,6 +94,7 @@ const BiometricsContainer = () => {
                 style={styles.textInput}
                 onChangeText={(text: string) => setUserPassword(text)}
                 onFocus={handleBiometricsAuth}
+                secureTextEntry={true}
             />  
 
                 <Pressable
