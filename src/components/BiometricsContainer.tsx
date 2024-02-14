@@ -1,5 +1,5 @@
-import { useCallback, useContext, useDebugValue, useEffect, useMemo, useState } from "react"
-import { Alert, NativeSyntheticEvent, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TextInputChangeEventData, View, useColorScheme } from "react-native"
+import { useCallback, useContext, useMemo, useState } from "react"
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, TextInputChangeEventData, View, useColorScheme } from "react-native"
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import { BiometricsContext } from "../states/BiometricsState";
 import EncryptedStorage from 'react-native-encrypted-storage';
@@ -9,6 +9,7 @@ import { handleFakeApiCall } from "../services/api"
 const BiometricsContainer = () => {
     const isDarkMode = useColorScheme() === 'dark'
     const { biometricsInfo, biometrics } = useContext(BiometricsContext)
+
     const backgroundStyle = useMemo(() => ({
         backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     }),[])
@@ -25,7 +26,14 @@ const BiometricsContainer = () => {
         if(storedUser){
             return JSON.parse(storedUser)
         }
-        return
+
+    },[])
+
+    const resetForm = useCallback(() => {
+        Alert.alert('Sucesso!')
+        setUserPassword('')
+        setUsername('')
+        setIsBiometricAuthEnabled(false)
     },[])
 
     const handleLogin = useCallback(async () => {
@@ -37,7 +45,7 @@ const BiometricsContainer = () => {
                 await EncryptedStorage.setItem('storedUser', JSON.stringify({username, userPassword}))
             }
             // faz o resto
-            
+            resetForm()
         } catch (error) {
             if(storedUserMatches) {
                 await EncryptedStorage.removeItem('storedUser')
@@ -56,7 +64,6 @@ const BiometricsContainer = () => {
             if(storedUser.username !== username){
                 Alert.alert('Outro usuário já usa autenticação biométrica')
             }
-            setStoredUserMatches(true)
         }
         setIsBiometricAuthEnabled(() => value)
         
@@ -67,6 +74,7 @@ const BiometricsContainer = () => {
         const storedUser = await getStoredUser()
         if(storedUser) {
             if(storedUser.username === username){
+                setStoredUserMatches(true)
                 return handleLogin()
             }
         }          
@@ -125,7 +133,7 @@ const styles = StyleSheet.create({
     scrollview: {
       display: 'flex',
       padding: '10%',
-      backgroundColor: 'pink',
+      backgroundColor: '#066f98',
     },
     contentContainer: {
       display: 'flex',
