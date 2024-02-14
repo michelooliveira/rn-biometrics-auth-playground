@@ -111,7 +111,7 @@ const BiometricsContainer = () => {
                 onPress={handleLogin}>
                 <Text style={styles.clickHereButton}>Autenticar</Text>
                 </Pressable>
-                {biometricsInfo.available && <View style={styles.container}>
+                {biometricsInfo?.available && <View style={styles.container}>
                     <Switch
                         disabled={!username.length || !userPassword.length}
                         trackColor={{false: '#767577', true: '#81b0ff'}}

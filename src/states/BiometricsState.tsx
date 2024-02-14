@@ -16,7 +16,9 @@ const BiometricsState: React.FC<any> = ({children}) => {
             try {
                 const { available, biometryType } = await reactNativeBiometrics.isSensorAvailable()
                 setBiometricsInfo({ available, biometryType })
-                reactNativeBiometrics.createKeys()
+                if(available) {
+                    await reactNativeBiometrics.createKeys()
+                }
             } catch (error) {
                 console.error({error})
             }
