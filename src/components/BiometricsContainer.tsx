@@ -26,7 +26,6 @@ const BiometricsContainer = () => {
         if(storedUser){
             return JSON.parse(storedUser)
         }
-
     },[])
 
     const resetForm = useCallback(() => {
@@ -36,21 +35,31 @@ const BiometricsContainer = () => {
         setIsBiometricAuthEnabled(false)
     },[])
 
+    const getUserBiometrics = async () => biometrics?.simplePrompt({
+            promptMessage: 'Realize a autenticação biométrica',
+            fallbackPromptMessage: 'Impossível obter autenticação biométrica. Entre com sua senha.'
+        })
+    
+
     const handleLogin = useCallback(async () => {
         try {
             // Tenta acessar API
             // Deu certo
             await handleFakeApiCall()
             if(!storedUserMatches && isBiometricAuthEnabled){
+                await getUserBiometrics()
                 await EncryptedStorage.setItem('storedUser', JSON.stringify({username, userPassword}))
             }
             // faz o resto
-            resetForm()
+            resetForm() // Como se tivesse seguido com a autenticação
         } catch (error) {
             if(storedUserMatches) {
                 await EncryptedStorage.removeItem('storedUser')
                 Alert.alert('Sua senha foi atualizada')
+            } else {
+                throw new Error('Ocorreu um erro ao logar.')
             }
+            
             return
         }
     },[username, userPassword, isBiometricAuthEnabled, storedUserMatches])
@@ -70,14 +79,20 @@ const BiometricsContainer = () => {
     };
 
     const handleBiometricsAuth = useCallback(async () => {
-        if(!username.length) return
-        const storedUser = await getStoredUser()
-        if(storedUser) {
-            if(storedUser.username === username){
-                setStoredUserMatches(true)
-                return handleLogin()
-            }
-        }          
+        try {
+            if(!username.length) return
+            const storedUser = await getStoredUser()
+            if(storedUser) {
+                if(storedUser.username === username){
+                    await getUserBiometrics()
+                    setStoredUserMatches(true)
+                    setUserPassword(storedUser.password)
+                    return handleLogin()
+                }
+            }    
+        } catch(err) {
+            Alert.alert('Erro ao realizar autenticação biométrica')
+        }      
     },[username])
 
     return <SafeAreaView style={backgroundStyle}>
@@ -113,7 +128,7 @@ const BiometricsContainer = () => {
                 </Pressable>
                 {biometricsInfo?.available && <View style={styles.container}>
                     <Switch
-                        disabled={!username.length || !userPassword.length}
+                        disabled={!username?.length || !userPassword?.length}
                         trackColor={{false: '#767577', true: '#81b0ff'}}
                         thumbColor={isBiometricAuthEnabled ? '#f5dd4b' : '#f4f3f4'}
                         ios_backgroundColor="#3e3e3e"
